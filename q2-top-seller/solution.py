@@ -1,6 +1,14 @@
 import pandas as pd
 import sys
-LEN_ARGV = 4
+
+df_names = [
+    "product",
+    "sales",
+    "store"
+]
+
+dfs = {}
+
 def get_inputs(argv):
     inputs = {}
 
@@ -35,6 +43,16 @@ def parse_inputs(inputs):
 
     return min_date, max_date, top
 
+def find_top_sellers(join_ds_name, att_name):
+    top_sellers_df = pd.merge(dfs["sales"], 
+                             dfs[join_ds_name], 
+                             left_on=join_ds_name, right_on="id")\
+                        .loc[:, [att_name, "quantity"]]
+
+    top_sellers_df = top_sellers_df.groupby(att_name)\
+                .sum()\
+                .nlargest(top, 'quantity', keep="all")
+    return top_sellers_df
 
 inputs = get_inputs(sys.argv[1:])
 min_date, max_date, top = parse_inputs(inputs)
@@ -43,62 +61,26 @@ product_fname = "product.csv"
 sales_fname = "sales.csv"
 store_fname = "store.csv"
 
-product_df = pd.read_csv(product_fname)
-sales_df = pd.read_csv(sales_fname)
-store_df = pd.read_csv(store_fname)
+for df_name in df_names:
+    dfs[df_name] = pd.read_csv(df_name + ".csv")
 
-date_mask = ((sales_df["date"] >= min_date) &
-             (sales_df["date"] <= max_date))
+date_mask = ((dfs["sales"]["date"] >= min_date) &
+             (dfs["sales"]["date"] <= max_date))
 
-masked_sales_df = sales_df[date_mask]
+dfs["sales"] = dfs["sales"][date_mask]
 
 
 # -- top seller product --
-top_seller_product_df = masked_sales_df.loc[:, ["product", "quantity"]]\
-                                        .groupby("product")\
-                                        .sum()\
-                                        .nlargest(top, 'quantity', keep="all")
-
-top_seller_product_df = pd.merge(top_seller_product_df,
-                                 product_df,
-                                 left_on="product", 
-                                 right_on="id")\
-                            .loc[:, ["name", "quantity"]]
+top_seller_product_df = find_top_sellers("product", "name")
 
 # -- top seller store --
-top_seller_store_df = masked_sales_df.loc[:, ["store", "quantity"]]\
-                                     .groupby("store")\
-                                     .sum()\
-                                     .nlargest(top, 'quantity', keep="all")
-
-top_seller_store_df = pd.merge(top_seller_store_df,
-                               store_df, 
-                               left_on="store", 
-                               right_on="id")\
-                        .loc[:, ["name", "quantity"]]
+top_seller_store_df = find_top_sellers("store", "name")
  
 #-- top seller brand --
-top_seller_brand_df = pd.merge(masked_sales_df,
-                               product_df, 
-                               left_on="product", 
-                               right_on="id")\
-                        .loc[:, ["brand", "quantity"]]
-
-top_seller_brand_df = top_seller_brand_df.groupby("brand")\
-                                         .sum()\
-                                         .nlargest(top, 'quantity', keep="all")
+top_seller_brand_df = find_top_sellers("product", "brand")
 
 # -- top seller city --
-top_seller_city_df = pd.merge(masked_sales_df, 
-                              store_df, 
-                              left_on="store", 
-                              right_on="id")\
-                        .loc[:, ["city", "quantity"]]
-
-top_seller_city_df = top_seller_city_df.groupby("city")\
-                                        .sum()\
-                                        .nlargest(top, 'quantity', keep="all")
-
+top_seller_city_df = find_top_sellers("store", "city")
 
 # print results
 print("-- top seller product --")
