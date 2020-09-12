@@ -1,8 +1,43 @@
 import pandas as pd
+import sys
+LEN_ARGV = 4
+def get_inputs(argv):
+    inputs = {}
 
-min_date = "2020-01-01"
-max_date = "2020-06-30"
-top = 3
+    for i in range(1, len(argv), 2):
+       inputs[argv[i-1]] = argv[i]
+    return inputs
+
+def parse_inputs(inputs):
+    min_date = "2020-01-01"
+    max_date = "2020-06-30"
+    top = 3
+    try:
+        min_date = inputs["--min-date"]
+        pass
+    except Exception as e:
+        print(f"[INFO] You did not set {e}. It will be used {min_date}")
+        pass
+
+    try:
+        max_date = inputs["--max-date"]
+        pass
+    except Exception as e:
+        print(f"[INFO] You did not set {e}. It will be used {max_date}")
+        pass
+
+    try:
+        top = int(inputs["--top"])
+        pass
+    except Exception as e:
+        print(f"[INFO] You did not set {e}. It will be used {top}")
+        pass
+
+    return min_date, max_date, top
+
+
+inputs = get_inputs(sys.argv[1:])
+min_date, max_date, top = parse_inputs(inputs)
 
 product_fname = "product.csv"
 sales_fname = "sales.csv"
