@@ -1,3 +1,9 @@
+def calculate_anagram_control(anagram_control, input_string, inc_value):
+    for char in input_string:
+        if char not in anagram_control:
+            anagram_control[char] = 0
+        anagram_control[char] += inc_value
+
 anagram_control = {} 
 
 diff_a = 0
@@ -7,16 +13,10 @@ a = input("a: ")
 b = input("b: ")
 
 # Count number of letters in a string
-for char in a:
-    if char not in anagram_control:
-        anagram_control[char] = 0
-    anagram_control[char] += 1
+calculate_anagram_control(anagram_control, a, 1)
 
 # Count and check number of letters in b string
-for char in b:
-    if char not in anagram_control:
-        anagram_control[char] = 0
-    anagram_control[char] -= 1
+calculate_anagram_control(anagram_control, b, -1)
 
 # Count number of different letters for each string
 for char in anagram_control:
